@@ -1,0 +1,12 @@
+# Slurm
+*.out
+jobs/
+
+# EPicker
+EPicker/
+
+# Assets
+assets/
+
+.vscode
+*.pyc
