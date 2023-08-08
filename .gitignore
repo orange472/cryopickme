@@ -10,3 +10,8 @@ assets/
 
 .vscode
 *.pyc
+
+# score_detections
+g/
+p/
+score_detections.py
