@@ -1,0 +1,44 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% DRPnet Particle Picking Pipeline Parameters
+% Nguyen P. Nguyen 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% --------------------- input/output paths
+inpath = 'W:\DATA2\test_OKT3';
+outpath = 'output';
+groundruth_path = '';
+
+% --------------------- train/test data
+start_train_detect = 2;  % index of the first micrograph to train detection network
+num_train_detect = 2;     % number of images to train detection network
+
+start_test_detect = 2;   % index of the first micrograph to test detection network (and train/test classification network)
+num_train_classify = 2;   % number of images to train classification network
+
+% --------------------- input image type: negative stain versus cryo-em
+is_negative_stain_data = 1;
+
+% --------------------- particle diameter in pixels
+box_size = 50;
+
+% --------------------- peak detection parameters, used after DRPnet
+sigma_detect = 3;
+threshold = 8;
+k_level = 3;
+
+%---------------------- classification network (CNN-2) parameters
+retrain = 1;
+num_train_mics = 2;
+num_epochs = 5;
+class_cutoff = 0.7;
+
+%--------------------- optional: filter/don't filter particles based on their intensity
+customize_pct_training = 0;
+pct_mean_training = 1;
+pct_std_training = 50;
+
+customize_pct_predict = 1;
+pct_mean_predict = 1;
+pct_std_predict = 50;
+
+filter_particle = 1;
