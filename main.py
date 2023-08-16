@@ -11,7 +11,7 @@ import argparse
 argv = sys.argv
 argc = len(argv)
 
-def parse_file(file_path: str, min_confidence: float, output_dir_path: str, max_lines = 1000):
+def parse_file(file_path: str, min_confidence: float, output_dir_path: str, max_lines = 1000, epicker: bool = True):
   """
   Parses the given file, filtering out non-entry lines (lines that do not start with a number) and entries with a confidence less than the confidence given.
 
@@ -24,44 +24,62 @@ def parse_file(file_path: str, min_confidence: float, output_dir_path: str, max_
     `max_lines`: the maximum number of lines to filter from the file
   """
 
-  # safety check, make sure that input file exists
+  # ! Safety check, make sure that input file exists
   if not os.path.isfile(file_path):
     print("File not found: " + file_path + ". No changes made.")
     return
   else:
     print(yellow_color, "Parsing", file_path.split("/")[-1], reset_color)
 
-  # safety check, make sure that file format is valid
-  file_extension: str = file_path.split(".")[-1] if len(file_path.split("/")[-1].split(".")) > 1 else "box"
+  # ! Safety check, make sure that file format is valid
+  input_file_name: str = file_path.split("/")[-1]
+  file_extension: str = file_path.split(".")[-1] if len(input_file_name.split(".")) > 1 else "box"
 
-  if file_extension != "box" and file_extension != "cbox" and file_extension != "star" and file_extension != "tsv":
+  if file_extension != "box" and file_extension != "coord" and file_extension != "cbox" and file_extension != "star" and file_extension != "tsv":
     print("Invalid file format.")
     return
 
-  # output file location
+  # make output directory
   if not os.path.isdir(output_dir_path):
     os.makedirs(output_dir_path)
 
   if output_dir_path[-1] != "/":
     output_dir_path = output_dir_path + "/"
 
-  # make sure output file has extension ".box"
-  if len(file_path.split(".")) > 1:
-    output_file_path = remove_suffix(file_path, file_path.split(".")[-1])
+  # output_file.* -> output_file.box
+  if len(input_file_name.split(".")) > 1:
+    output_file_name = remove_suffix(input_file_name, input_file_name.split(".")[-1])
+    output_file_name = output_file_name + "box"
   else:
-    output_file_path = file_path + ".box"
+    output_file_name = input_file_name + ".box"
 
-  output_file = open(output_dir_path + output_file_path.split("/")[-1], "w")
+  # make output file
+  output_file = open(output_dir_path + output_file_name, "w")
+  print("Output file:", output_file_name)
 
-  # * convert file to box format
-  out_dfs = process_conversion([file_path], file_extension, "box", out_dir=None)
-  out_df = list(out_dfs.values())[0]
-  boxes = list(out_df.itertuples(name="Box", index=False))
+  if file_extension == "coord":
+    with open(file_path, 'r') as file:
+      for line in file.readlines():
+        output_file.write(line)
+  else:
+    # * convert input file to box format
+    out_dfs = process_conversion([file_path], file_extension, "box", out_dir=None)
+    out_df = list(out_dfs.values())[0]
+    boxes = list(out_df.itertuples(name="Box", index=False))
 
-  for box in boxes:
-    x,y,w,h = round(box.x), round(box.y), round(box.w), round(box.h)
-    output_file.write(" ".join([str(x),str(y),str(w),str(h)]))
-    output_file.write("\n")
+    for box in boxes:
+      x,y,w,h = round(box.x), round(box.y), round(box.w), round(box.h)
+      
+      if(epicker):
+        temp_x = x
+        temp_y = y
+        x = (x + w) / 2
+        y = (y + h) / 2
+        w = w - temp_x
+        h = h - temp_y
+
+      output_file.write(" ".join([str(x),str(y),str(w),str(h)]))
+      output_file.write("\n")
   
   output_file.close()
 
@@ -99,9 +117,15 @@ def main():
   box_size = args.box_size
 
   # append "/" to avoid "directory does not exist" errors
-  if parser_output_dir[-1] != "/":
+  if mrc_file_path[-1] != "/":
+    mrc_file_path = mrc_file_path + "/"
+  if cbox_file_path[-1] != "/":
+    cbox_file_path = cbox_file_path + "/"
+  if expected_dir != None and expected_dir[-1] != "/":
+    expected_dir = expected_dir + "/"
+  if parser_output_dir != None and parser_output_dir[-1] != "/":
     parser_output_dir = parser_output_dir + "/"
-  if plot_output_dir[-1] != "/":
+  if plot_output_dir != None and plot_output_dir[-1] != "/":
     plot_output_dir = plot_output_dir + "/"
 
   if(not os.path.isdir(parser_output_dir)):
